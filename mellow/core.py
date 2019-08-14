@@ -29,7 +29,7 @@ def backprop_x(ans, net, x, θ):
         _sum = θ[:n, n] @ net.V[:n]
         net.Jx[n] = net.grad_σ(_sum) * (θ[:n, n] @ net.Jx[:n, :])
 
-    # Constructs vector-jacobian product operator
+    # Constructs vector-jacobian product operator.
     return lambda g: np.tensordot(g, net.Jx[-out:], 1)
 
 
@@ -42,7 +42,7 @@ def backprop_θ(ans, net, x, θ):
         net.Jθ[n, :n, n] += net.V[:n]
         net.Jθ[n, ...] *= net.grad_σ(θ[:n, n] @ net.V[:n])
 
-    # Constructs vector-jacobian product operator
+    # Constructs vector-jacobian product operator.
     return lambda g: np.tensordot(g, net.Jθ[-out:], 1)
 
 
@@ -112,12 +112,14 @@ class Network(object):
         """Computes output vector via forward propagation."""
         return forward_prop(self, x, self.θ if θ is None else θ)
 
-    def model(self, data, cost=ops.mse, optimizer=lambda g: 0.01 * g):
+    def model(self, data, loss=ops.mse, optimizer=ops.Momentum()):
         """Trains network via stochastic gradient descent."""
-        grad_cost = grad(cost, 2)
-
         for x, y in np.random.permutation(data):
-            g = grad_cost(self, x, self.θ, y)
-            self.θ -= optimizer(np.squeeze(g))
+
+            def cost(θ):
+                nonlocal self, x, y
+                return loss(self, x, θ, y)
+
+            self.θ -= optimizer(cost, self.θ)
 
         return self
