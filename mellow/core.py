@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import autograd.numpy as np
 from autograd.extend import primitive, defvjp
+import autograd.numpy as np
 from autograd import grad
 
-import ops
+from nn.activations import elu
+from nn.losses import mse
+from nn.optimizers import Momentum
 
 # -------------------- computation methods --------------------
 
@@ -95,7 +97,7 @@ def node_vect(struct):
 
 
 class Network(object):
-    def __init__(self, inp, out, θ=None, func=ops.elu):
+    def __init__(self, inp, out, θ=None, func=elu):
         inp += 1  # Accounts for bias node.
         hid = hidden_layer(inp, out, θ)
         self.struct = np.array([inp, hid, out], dtype=int)
@@ -112,7 +114,7 @@ class Network(object):
         """Computes output vector via forward propagation."""
         return forward_prop(self, x, self.θ if θ is None else θ)
 
-    def model(self, data, loss=ops.mse, optimizer=ops.Momentum()):
+    def model(self, data, loss=mse, optimizer=Momentum()):
         """Trains network via stochastic gradient descent."""
         for x, y in np.random.permutation(data):
 
