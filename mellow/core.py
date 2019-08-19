@@ -4,9 +4,9 @@ from autograd.extend import primitive, defvjp
 import autograd.numpy as np
 from autograd import grad
 
-from nn.activations import elu
-from nn.losses import mse
-from nn.optimizers import Momentum
+from .nn.activations import elu
+from .nn.losses import mse
+from .nn.optimizers import Momentum
 
 # -------------------- computation methods --------------------
 
@@ -114,14 +114,16 @@ class Network(object):
         """Computes output vector via forward propagation."""
         return forward_prop(self, x, self.θ if θ is None else θ)
 
-    def model(self, data, loss=mse, optimizer=Momentum()):
+    def model(self, data, batch_size=1, loss=mse, optimizer=Momentum()):
         """Trains network via stochastic gradient descent."""
-        for x, y in np.random.permutation(data):
+        data = np.random.permutation(data)
 
-            def cost(θ):
-                nonlocal self, x, y
-                return loss(self, x, θ, y)
+        for batch in np.array_split(data, np.ceil(len(data) / batch_size)):
+            Δθ = 0
 
-            self.θ -= optimizer(cost, self.θ)
+            for x, y in batch:
+                Δθ += optimizer(lambda θ: loss(self, x, θ, y), self.θ) / len(batch)
+
+            self.θ += Δθ
 
         return self
