@@ -14,7 +14,7 @@ class Momentum(object):
     def __call__(self, cost, θ):
         self.m = self.α * self.m + self.η * grad(cost)(θ)
 
-        return self.m
+        return -self.m
 
 
 class NesterovMomentum(object):
@@ -28,7 +28,7 @@ class NesterovMomentum(object):
         θ = θ - self.α * self.m
         self.m = self.α * self.m + self.η * grad(cost)(θ)
 
-        return self.m
+        return -self.m
 
 
 class Adagrad(object):
@@ -40,9 +40,9 @@ class Adagrad(object):
 
     def __call__(self, cost, θ):
         g = grad(cost)(θ)
-        self.G = self.G + g ** 2
+        self.G += g ** 2
 
-        return self.η * g / np.sqrt(self.G + self.ϵ)
+        return -self.η * g / np.sqrt(self.G + self.ϵ)
 
 
 class Adadelta(object):
@@ -59,7 +59,7 @@ class Adadelta(object):
     def __call__(self, cost, θ):
         g = grad(cost)(θ)
         self.v = self.α * self.v + (1 - self.α) * (g ** 2)
-        Δθ = self.rmse(self.EΔ) * g / self.rmse(self.v)
+        Δθ = -self.rmse(self.EΔ) * g / self.rmse(self.v)
         self.EΔ = self.α * self.EΔ + (1 - self.α) * (Δθ ** 2)
 
         return Δθ
@@ -80,7 +80,7 @@ class RMSprop(object):
         g = grad(cost)(θ)
         self.v = self.α * self.v + (1 - self.α) * (g ** 2)
 
-        return self.η * g / self.rmse(self.v)
+        return -self.η * g / self.rmse(self.v)
 
 
 class Adam(object):
@@ -102,7 +102,7 @@ class Adam(object):
         self.m = self.β1 * self.m + (1 - self.β1) * g
         self.v = self.β2 * self.v + (1 - self.β2) * (g ** 2)
 
-        return self.η * self.m / (np.sqrt(self.v) + self.ϵ)
+        return -self.η * self.m / (np.sqrt(self.v) + self.ϵ)
 
 
 class AdaMax(object):
@@ -124,7 +124,7 @@ class AdaMax(object):
         self.m = self.β1 * self.m + (1 - self.β1) * g
         self.u = np.maximum(self.β2 * self.u, np.abs(g))
 
-        return self.η * self.m / (self.u + self.ϵ)
+        return -self.η * self.m / (self.u + self.ϵ)
 
 
 class Nadam(object):
@@ -146,7 +146,7 @@ class Nadam(object):
         self.m = self.β1 * self.m + (1 - self.β1) * g
         self.v = self.β2 * self.v + (1 - self.β2) * (g ** 2)
 
-        return (
+        return -(
             self.η * (self.β1 * self.m + (1 - self.β1) * g) / (np.sqrt(self.v) + self.ϵ)
         )
 
@@ -171,4 +171,4 @@ class AMSGrad(object):
         self.v = self.β2 * self.v + (1 - self.β2) * (g ** 2)
         self.vh = np.maximum(self.vh, self.v)
 
-        return self.η * self.m / (np.sqrt(self.vh) + self.ϵ)
+        return -self.η * self.m / (np.sqrt(self.vh) + self.ϵ)
