@@ -8,48 +8,6 @@ from .nn.activations import elu
 from .nn.losses import mse
 from .nn.optimizers import Momentum
 
-# -------------------- computation methods --------------------
-
-
-@primitive
-def forward_prop(net, x, θ):
-    """Computes output vector via forward propagation."""
-    inp, _, out = net.struct
-    net.V[1:inp] = x
-
-    for n in range(inp, net.V.size):
-        net.V[n] = net.σ(θ[:n, n] @ net.V[:n])
-
-    return net.V[-out:]
-
-
-def backprop_x(ans, net, x, θ):
-    """Computes jacobian w.r.t. input vector."""
-    inp, _, out = net.struct
-
-    for n in range(inp, net.V.size):
-        _sum = θ[:n, n] @ net.V[:n]
-        net.Jx[n] = net.grad_σ(_sum) * (θ[:n, n] @ net.Jx[:n, :])
-
-    # Constructs vector-jacobian product operator.
-    return lambda g: np.tensordot(g, net.Jx[-out:], 1)
-
-
-def backprop_θ(ans, net, x, θ):
-    """Computes jacobian w.r.t. network parameters."""
-    inp, _, out = net.struct
-
-    for n in range(inp, net.V.size):
-        net.Jθ[n, :n, inp:] = np.tensordot(θ[:n, n].T, net.Jθ[:n, :n, inp:], 1)
-        net.Jθ[n, :n, n] += net.V[:n]
-        net.Jθ[n, ...] *= net.grad_σ(θ[:n, n] @ net.V[:n])
-
-    # Constructs vector-jacobian product operator.
-    return lambda g: np.tensordot(g, net.Jθ[-out:], 1)
-
-
-defvjp(forward_prop, backprop_x, backprop_θ, argnums=[1, 2])
-
 
 # -------------------- factory methods --------------------
 
@@ -104,15 +62,34 @@ class Network(object):
 
         self.σ = func
         self.θ = adjacency_mat(self.struct, θ)
-        self.V = node_vect(self.struct)
+        self.v = node_vect(self.struct)
 
         self.grad_σ = grad(func)
-        self.Jx = np.eye(self.V.size, dtype=float)[:, 1:inp]
-        self.Jθ = np.zeros([self.V.size] * 3, dtype=float)
+        self.J = np.zeros([self.v.size] * 3, dtype=float)
 
+    @primitive
     def evaluate(self, x, θ=None):
         """Computes output vector via forward propagation."""
-        return forward_prop(self, x, self.θ if θ is None else θ)
+        θ = self.θ if θ is None else θ
+        inp, _, out = self.struct
+        self.v[1:inp] = x
+
+        for n in range(inp, self.v.size):
+            self.v[n] = self.σ(θ[:n, n] @ self.v[:n])
+
+        return self.v[-out:]
+
+    def backprop(ans, self, x, θ):
+        """Computes jacobian w.r.t. network parameters."""
+        inp, _, out = self.struct
+
+        for n in range(inp, self.v.size):
+            self.J[n, :n, inp:] = np.tensordot(θ[:n, n].T, self.J[:n, :n, inp:], 1)
+            self.J[n, :n, n] += self.v[:n]
+            self.J[n, ...] *= self.grad_σ(θ[:n, n] @ self.v[:n])
+
+        # Constructs vector-jacobian product operator.
+        return lambda g: np.tensordot(g, self.J[-out:], 1)
 
     def model(self, data, batch_size=1, loss=mse, optimizer=Momentum()):
         """Trains network via stochastic gradient descent."""
@@ -122,8 +99,12 @@ class Network(object):
             Δθ = 0
 
             for x, y in batch:
-                Δθ += optimizer(lambda θ: loss(self, x, θ, y), self.θ) / len(batch)
+                cost = lambda θ: loss(y, self.evaluate(x, θ))
+                Δθ += optimizer(cost, self.θ) / len(batch)
 
             self.θ += Δθ
 
         return self
+
+
+defvjp(Network.evaluate, Network.backprop, argnums=[2])
