@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import autograd.numpy as np
-from autograd import grad
+import jax.numpy as np
+from jax import grad
 
 
 class Momentum(object):

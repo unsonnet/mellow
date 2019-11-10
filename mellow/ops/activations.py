@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import autograd.numpy as np
+import jax.numpy as np
 
 
 def elu(z):
