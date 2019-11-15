@@ -7,14 +7,15 @@ from jax import grad
 class Optimizer(object):
     """Base class for optimizers."""
 
-    def __init__(self, net, dvs):
-        self.inp = net.shape[0]
+    def __init__(self, inp, dvs):
+        self.inp = inp
         self.dvs = dvs
 
         for var in self.dvs:
             setattr(self, var, 0)
 
-    def insert(self, idx):
+    def add_nd(self, idx):
+        """Updates optimizer state to reflect expanded network."""
         col = idx - self.inp
 
         for var in self.dvs:
@@ -22,7 +23,8 @@ class Optimizer(object):
             arr = np.insert(np.insert(arr, idx, 0, 0), col, 0, 1)
             setattr(self, var, arr)
 
-    def delete(self, idx):
+    def del_nd(self, idx):
+        """Updates optimizer state to reflect reduced network."""
         col = idx - self.inp
 
         for var in self.dvs:

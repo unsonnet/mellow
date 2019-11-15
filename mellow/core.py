@@ -7,6 +7,8 @@ import nn
 
 
 class Network(object):
+    """Homogenous feedforward neural network."""
+
     def __init__(self, inp, out, params, act):
         hid = nn.depth(inp, out, params)
         self.shape = np.array([inp, hid, out], dtype=int)
@@ -22,7 +24,7 @@ class Network(object):
         return self._eval(self.θ, v)
 
     def _eval(self, θ, v):
-        """Produces hypothesis via forward pass."""
+        """Produces a hypothesis."""
         inp, _, out = self.shape
 
         for idx in range(inp, v.size):
@@ -31,6 +33,6 @@ class Network(object):
 
         return np.dot(v, θ[:, -out:])
 
-    def model(self, data, optimizer):
-        """Trains network via stochastic gradient descent."""
+    def model(self, data, labels, optimizer):
+        """Fits network to labeled training set."""
         pass
