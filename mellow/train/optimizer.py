@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import jax.numpy as np
-from jax import grad
 
 
 class Optimizer(object):
@@ -31,3 +30,31 @@ class Optimizer(object):
             arr = getattr(self, var)
             arr = np.delete(np.delete(arr, idx, 0), col, 1)
             setattr(self, var, arr)
+
+
+class Momentum(Optimizer):
+    """Optimizer that implements Momentum."""
+
+    def __init__(self, inp, lr=0.01, decay=0.9):
+        super().__init__(inp, ["m"])
+        self.λ = init_schedule(lr)
+        self.μ = decay
+
+    def __call__(self, t, g):
+        self.m = self.μ * self.m + g
+
+        return -self.λ(t) * self.m
+
+
+class Nesterov(Optimizer):
+    """Optimizer that implements Nesterov Momentum."""
+
+    def __init__(self, inp, lr=0.01, decay=0.9):
+        super().__init__(inp, ["m"])
+        self.λ = init_schedule(lr)
+        self.μ = decay
+
+    def __call__(self, t, g):
+        self.m = self.μ * self.m + g
+
+        return -self.λ(t) * (self.μ * self.m + g)
