@@ -7,10 +7,10 @@ import jax.ops as jo
 # ------------- network constructors -------------
 
 
-def depth(inp, out, params):
+def depth(inb, out, params):
     """Deduces depth of hidden layer."""
-    dis = 1 + 4 * inp * (inp - 1) + 4 * out * (out - 1) + 8 * len(params)
-    hid = (1 - 2 * (inp + out) + np.sqrt(dis)) / 2
+    dis = 1 + 4 * inb * (inb - 1) + 4 * out * (out - 1) + 8 * len(params)
+    hid = (1 - 2 * (inb + out) + np.sqrt(dis)) / 2
 
     if not float(hid).is_integer():
         raise ValueError("Insufficient number of parameters.")
@@ -20,11 +20,11 @@ def depth(inp, out, params):
 
 def adj_arr(shape, params):
     """Constructs a sliced weighted acyclic-digraph adjacency matrix."""
-    inp, _, out = shape
+    inb, _, out = shape
     Σ = np.sum(shape)
 
-    outbound = np.array([Σ - max(inp, n + 1) for n in range(Σ - out)])
-    arr = np.flip(np.arange(Σ - inp), 0) < outbound[:, None]
+    outbound = np.array([Σ - max(inb, n + 1) for n in range(Σ - out)])
+    arr = np.flip(np.arange(Σ - inb), 0) < outbound[:, None]
 
     return jo.index_update(arr.astype(float), arr, params)
 

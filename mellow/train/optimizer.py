@@ -9,7 +9,7 @@ class Optimizer(object):
     """Base class for optimizers."""
 
     def __init__(self, inp, dvs):
-        self.inp = inp
+        self.inb = inp + 1  # Accounts for bias unit.
         self.dvs = dvs
 
         for var in self.dvs:
@@ -20,7 +20,7 @@ class Optimizer(object):
 
     def add_nd(self, idx):
         """Updates optimizer state to reflect expanded network."""
-        col = idx - self.inp
+        col = idx - self.inb
 
         for var in self.dvs:
             arr = getattr(self, var)
@@ -29,7 +29,7 @@ class Optimizer(object):
 
     def del_nd(self, idx):
         """Updates optimizer state to reflect reduced network."""
-        col = idx - self.inp
+        col = idx - self.inb
 
         for var in self.dvs:
             arr = getattr(self, var)
