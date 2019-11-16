@@ -2,6 +2,8 @@
 
 import jax.numpy as np
 
+from mellow.train import schedule
+
 
 class Optimizer(object):
     """Base class for optimizers."""
@@ -32,6 +34,14 @@ class Optimizer(object):
             setattr(self, var, arr)
 
 
+def init_schedule(obj):
+    """Declares learning rate schedule."""
+    return obj if callable(obj) else schedule.Constant(obj)
+
+
+# ------------------ optimizers ------------------
+
+
 class Momentum(Optimizer):
     """Optimizer that implements Momentum."""
 
@@ -40,10 +50,10 @@ class Momentum(Optimizer):
         self.λ = init_schedule(lr)
         self.μ = decay
 
-    def __call__(self, t, g):
+    def __call__(self, i, g):
         self.m = self.μ * self.m + g
 
-        return -self.λ(t) * self.m
+        return -self.λ(i) * self.m
 
 
 class Nesterov(Optimizer):
@@ -54,7 +64,7 @@ class Nesterov(Optimizer):
         self.λ = init_schedule(lr)
         self.μ = decay
 
-    def __call__(self, t, g):
+    def __call__(self, i, g):
         self.m = self.μ * self.m + g
 
-        return -self.λ(t) * (self.μ * self.m + g)
+        return -self.λ(i) * (self.μ * self.m + g)
