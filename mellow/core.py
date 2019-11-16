@@ -3,7 +3,7 @@
 import jax.numpy as np
 import jax.ops as jo
 
-import nn
+from mellow import nn
 
 
 class Network(object):

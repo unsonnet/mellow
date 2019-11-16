@@ -1,1 +1,1 @@
-from .core import Network
+from mellow.core import Network

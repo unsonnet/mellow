@@ -15,6 +15,9 @@ class Optimizer(object):
         for var in self.dvs:
             setattr(self, var, 0)
 
+    def __call__(self, i, g):
+        raise NotImplementedError
+
     def add_nd(self, idx):
         """Updates optimizer state to reflect expanded network."""
         col = idx - self.inp
