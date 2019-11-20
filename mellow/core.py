@@ -20,12 +20,12 @@ class Network(object):
 
     def predict(self, z):
         """Produces a hypothesis."""
-        return self.evaluate(self.θ, z)
+        return self.eval(self.θ, z)
 
     def eval(self, θ, z):
         """Evaluates network on input."""
         inb, _, out = self.shape
-        v = self.transform(z)
+        v = self.reshape(z)
 
         for idx in range(inb, v.shape[-1]):
             Σ = np.dot(v[..., :idx], θ[:idx, idx - inb])
@@ -33,14 +33,10 @@ class Network(object):
 
         return np.dot(v, θ[:, -out:])
 
-    def transform(self, z):
-        """Preprocesses data for network evaluation."""
+    def reshape(self, z):
+        """Formats data for network evaluation."""
         inb, _, _ = self.shape
         rows = z.transpose()[..., None].shape[1]
         v = np.tile(self.v, (rows, 1))
 
         return jo.index_update(v, jo.index[..., 1:inb], z)
-
-    def model(self, data, labels, optimizer):
-        """Fits network to labeled training set."""
-        pass
