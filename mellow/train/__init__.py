@@ -22,7 +22,7 @@ class SGD(object):
         assert data.shape[0] == target.shape[0]
 
         for t in range(epochs):
-            mo.shuffle(data, target)
+            data, target = list(mo.permute(data, target))
 
             for z, y in mo.batch(data, target, n=batch_size):
                 _, g = self.grad_J(self.net.θ, z, y)
