@@ -36,6 +36,8 @@ class Network(object):
     def reshape(self, z):
         """Formats data for network evaluation."""
         inb, _, _ = self.shape
+        assert z.transpose().shape[0] == inb - 1
+
         rows = z.transpose()[..., None].shape[1]
         v = np.tile(self.v, (rows, 1))
 

@@ -19,6 +19,7 @@ class SGD(object):
 
     def model(self, data, target, batch_size, epochs):
         """Fits network to labeled training set."""
+        assert data.shape[0] == target.shape[0]
 
         for t in range(epochs):
             mo.shuffle(data, target)
