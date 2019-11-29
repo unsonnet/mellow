@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import warnings
+
 import jax.numpy as np
 import jax.ops as jo
 
@@ -12,10 +14,14 @@ class Network(object):
     def __init__(self, inp, out, params, act):
         inb = inp + 1  # Accounts for bias unit.
         hid = nn.depth(inb, out, params)
-        self.shape = np.array([inb, hid, out], dtype=int)
 
-        self.θ = nn.adj_arr(self.shape, params)
-        self.v = nn.nd_vect(self.shape)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="Explicitly requested dtype.*")
+
+            self.shape = np.array([inb, hid, out], dtype=int)
+            self.θ = nn.adj_arr(self.shape, params)
+            self.v = nn.nd_vect(self.shape)
+
         self.A = act
 
     def predict(self, z):
