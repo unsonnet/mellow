@@ -3,11 +3,13 @@
 import jax.numpy as np
 import jax.ops as jo
 
+from mellow.typing import Shape, Array, Tensor
+
 
 # ------------- network constructors -------------
 
 
-def depth(inb, out, params):
+def depth(inb: int, out: int, params: Array) -> int:
     """Deduces depth of hidden layer.
     
     Args:
@@ -37,7 +39,7 @@ def depth(inb, out, params):
     return hid
 
 
-def adj_arr(shape, params):
+def adj_arr(shape: Shape, params: Array) -> Tensor:
     """Constructs a sliced weighted acyclic-digraph adjacency matrix.
 
     Assigns weights from `params` to an acylic-digraph adjacency matrix
@@ -72,7 +74,7 @@ def adj_arr(shape, params):
     return jo.index_update(arr.astype(float), arr, params)
 
 
-def nd_vect(shape):
+def nd_vect(shape: Shape) -> Tensor:
     """Constructs a node vector.
 
     Assigns 0 to all non-output nodes except the bias unit which
@@ -94,21 +96,21 @@ def nd_vect(shape):
 # ------------- activation functions -------------
 
 
-def elu(z):
+def elu(z: Tensor) -> Tensor:
     """Computes exponential linear unit."""
     return np.where(z > 0, z, np.exp(z) - 1.0)
 
 
-def relu(z, a=0.0):
+def relu(z: Tensor, a: float = 0.0) -> Tensor:
     """Computes rectified linear unit."""
     return np.where(z > 0, z, a * z)
 
 
-def sigmoid(z):
+def sigmoid(z: Tensor) -> Tensor:
     """Computes logistic sigmoid."""
     return np.where(z > 0, 1.0 / (1.0 + np.exp(-z)), np.exp(z) / (1.0 + np.exp(z)))
 
 
-def tanh(z):
+def tanh(z: Tensor) -> Tensor:
     """Computes hyperbolic tangent."""
     return np.tanh(z)
