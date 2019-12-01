@@ -45,13 +45,13 @@ class Network(object):
         """Produces a hypothesis from `z`.
         
         Args:
-            z: Single or vertically-stacked array of input.
+            z: Single or vertically-stacked data samples.
 
         Returns:
             Vertically-stacked output layers.
 
         Raises:
-            AttributeError: If insufficient input data is given.
+            AttributeError: If insufficient input is given.
         """
         return self.eval(self.θ, z)
 
@@ -63,23 +63,20 @@ class Network(object):
         
         Args:
             θ: Topologically-sorted weighted adjacency matrix.
-            z: Single or vertically-stacked array of input.
+            z: Single or vertically-stacked data samples.
 
         Returns:
             Vertically-stacked output layers.
 
         Raises:
-            AttributeError: If insufficient input data is given.
+            AttributeError: If insufficient input is given.
             ValueError: If network cannot be parameterized by `θ`.
         """
         inb, _, out = self.shape
         v = self.reshape(z)
 
         if self.θ.shape != θ.shape:
-            msg = (
-                "Weighted adjacency matrix of shape {} required to parameterize a {} "
-                "network, got {}."
-            )
+            msg = "{} adj matrix required to parameterize a {} network, got {}."
             raise ValueError(msg.format(self.θ.shape, self.shape, θ.shape))
 
         for idx in range(inb, v.shape[-1]):
@@ -95,7 +92,7 @@ class Network(object):
         vertically if `z` represents multiple data samples.
 
         Args:
-            z: Single or vertically-stacked array of input.
+            z: Single or vertically-stacked data samples.
 
         Returns:
             Vertically-stacked node vectors.
@@ -107,10 +104,7 @@ class Network(object):
         inb, _, _ = self.shape
 
         if inb - 1 != np.transpose(z).shape[0]:
-            msg = (
-                "{} values required per input slice in order for network to evaluate "
-                "data, got {}."
-            )
+            msg = "{} values required per data sample, got {}."
             raise AttributeError(msg.format(inb - 1, np.transpose(z).shape[0]))
 
         rows = np.transpose(z)[..., None].shape[1]  # Counts number of data samples.

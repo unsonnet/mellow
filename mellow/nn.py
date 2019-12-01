@@ -30,11 +30,8 @@ def depth(inb: int, out: int, params: Array) -> int:
     hid = (1 - 2 * (inb + out) + np.sqrt(dis)) / 2
 
     if not float(hid).is_integer():
-        msg = (
-            "Inadequate number of weights for deducing hidden depth of a [{}, :, {}] "
-            "network, got {}."
-        )
-        raise ValueError(msg.format(inb, out, len(params)))
+        msg = "{} weights insufficient for deducing depth of a [{}, :, {}] network."
+        raise ValueError(msg.format(len(params), inb, out))
 
     return hid
 
@@ -65,10 +62,7 @@ def adj_arr(shape: Shape, params: Array) -> Tensor:
     arr = np.flip(np.arange(Σ - inb), 0) < outbound[:, None]
 
     if np.count_nonzero(arr) != len(params):
-        msg = (
-            "{} weights required to initialize acyclic-digraph adjacency matrix of a "
-            "{} network, got {}."
-        )
+        msg = "{} weights required to initialize adj matrix of a {} network, got {}."
         raise AttributeError(msg.format(np.count_nonzero(arr), shape, len(params)))
 
     return jo.index_update(arr.astype(float), arr, params)
