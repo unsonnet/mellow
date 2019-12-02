@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import jax.numpy as np
+import jax.random as random
 from jax import value_and_grad
 
 import mellow.ops as mo
@@ -17,14 +17,13 @@ class SGD(object):
         self.grad_J = value_and_grad(J)
         self.opt = optimizer
 
-    def model(self, data, target, batch_size, epochs):
+    def model(self, key, examples, batch_size, epochs):
         """Fits network to labeled training set."""
-        assert data.shape[0] == target.shape[0]
-
         for t in range(epochs):
-            data, target = list(mo.permute(data, target))
+            key, subkey = random.split(key)
+            examples = mo.shuffle(subkey, examples)
 
-            for z, y in mo.batch(data, target, n=batch_size):
+            for z, y in mo.batch(examples, step=batch_size):
                 _, g = self.grad_J(self.net.θ, z, y)
                 self.net.θ += self.opt(self.i, g)
                 self.i += 1

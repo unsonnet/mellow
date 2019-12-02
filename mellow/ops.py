@@ -1,22 +1,31 @@
 # -*- coding: utf-8 -*-
 
-import numpy as onp
+import jax.random as random
 
 
-def permute(*arrs):
-    """Shuffles the contents of arrays in unison."""
-    rng = onp.random.get_state()
+def shuffle(key, tensors, axis=0):
+    """Shuffles the contents of tensors in unison."""
+    size(tensors, axis=axis)
 
-    for arr in arrs:
-        onp.random.set_state(rng)
-        yield onp.random.permutation(arr)
+    return [random.shuffle(key, tsr, axis=axis) for tsr in tensors]
 
 
-def batch(*arrs, n=1):
-    """Iterates over evenly sliced arrays in unison."""
-    length = min(map(len, arrs))
-    arrs = [onp.copy(arr) for arr in arrs]
+def batch(tensors, step=1):
+    """Generates uniform batches from tensors in unison."""
+    length = size(tensors, axis=0)
 
-    for idx in range(0, length, n):
-        end = min(idx + n, length)
-        yield [arr[idx:end] for arr in arrs]
+    for idx in range(0, length, step):
+        end = min(idx + step, length)
+
+        yield [tsr[idx:end] for tsr in tensors]
+
+
+def size(tensors, axis=0):
+    """Measures the size of tensors along an axis."""
+    sizes = set([tsr.shape[axis] for tsr in tensors])
+
+    if len(sizes) not in (0, 1):
+        msg = "tensors of uniform size along {} axis required, got shapes {}."
+        raise ValueError(msg.format(axis, [tsr.shape for tsr in tensors]))
+
+    return sizes.pop()
