@@ -5,14 +5,14 @@ import warnings
 import jax.numpy as np
 import jax.ops as jo
 
-from mellow.typing import Array, Tensor, UFunc
 from mellow import nn
+from mellow.typing import Tensor, UFunc
 
 
 class Network(object):
     """Homogenous feedforward neural network."""
 
-    def __init__(self, inp: int, out: int, params: Array, act: UFunc) -> None:
+    def __init__(self, inp: int, out: int, params: Tensor, act: UFunc) -> None:
         """Inits Network.
 
         Deduces the structure of a network represented by `inp`, `out`,
@@ -22,7 +22,7 @@ class Network(object):
         Args:
             inp: Number of input nodes excluding bias unit.
             out: Number of output nodes.
-            params: One-dimensional array of weights.
+            params: Sequence of weights.
             act: Activation function.
 
         Raises:
@@ -43,12 +43,12 @@ class Network(object):
 
     def predict(self, z: Tensor) -> Tensor:
         """Produces a hypothesis from `z`.
-        
+
         Args:
-            z: Single or vertically-stacked data samples.
+            z: Stacked input samples.
 
         Returns:
-            Vertically-stacked output layers.
+            Stacked output layers.
 
         Raises:
             AttributeError: If insufficient input is given.
@@ -60,13 +60,13 @@ class Network(object):
 
         Forward propagates data from `z` through network with arcs
         parameterized by `θ`.
-        
+
         Args:
             θ: Topologically-sorted weighted adjacency matrix.
-            z: Single or vertically-stacked data samples.
+            z: Stacked input samples.
 
         Returns:
-            Vertically-stacked output layers.
+            Stacked output layers.
 
         Raises:
             AttributeError: If insufficient input is given.
@@ -86,16 +86,16 @@ class Network(object):
         return np.dot(v, θ[:, -out:])
 
     def reshape(self, z: Tensor) -> Tensor:
-        """Formats data for network evaluation.
+        """Formats input for network evaluation.
 
-        Assigns data from `z` to input layer. Vectors are stacked
-        vertically if `z` represents multiple data samples.
+        Assigns data from `z` to input layer. Multiple node vectors are
+        constructed if `z` represents a sequence of input samples.
 
         Args:
-            z: Single or vertically-stacked data samples.
+            z: Stacked input samples.
 
         Returns:
-            Vertically-stacked node vectors.
+            Stacked node vectors.
 
         Raises:
             AttributeError: If input layers cannot be completely
@@ -104,10 +104,10 @@ class Network(object):
         inb, _, _ = self.shape
 
         if inb - 1 != np.transpose(z).shape[0]:
-            msg = "{} values required per data sample, got {}."
+            msg = "{} values required per input sample, got {}."
             raise AttributeError(msg.format(inb - 1, np.transpose(z).shape[0]))
 
-        rows = np.transpose(z)[..., None].shape[1]  # Counts number of data samples.
+        rows = np.transpose(z)[..., None].shape[1]  # Counts number of input samples.
         v = np.tile(self.v, (rows, 1))
 
         return jo.index_update(v, jo.index[..., 1:inb], z)

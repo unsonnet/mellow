@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from typing import Sequence, Union, Callable
+from typing import Callable, Iterable, List, Sequence, Union
 
 import jax.numpy as np
 
 
 Shape = Sequence[int]
-Array = Sequence[float]
 Tensor = Union[float, np.ndarray]
+
+Dataset = Iterable[Tensor]
+Loss = Callable[[Tensor, Tensor], Tensor]
 UFunc = Callable[[Tensor], Tensor]

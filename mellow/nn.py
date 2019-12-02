@@ -3,19 +3,19 @@
 import jax.numpy as np
 import jax.ops as jo
 
-from mellow.typing import Shape, Array, Tensor
+from mellow.typing import Shape, Tensor
 
 
 # ------------- network constructors -------------
 
 
-def depth(inb: int, out: int, params: Array) -> int:
+def depth(inb: int, out: int, params: Tensor) -> int:
     """Deduces depth of hidden layer.
-    
+
     Args:
         inb: Number of input nodes not excluding bias unit.
         out: Number of output nodes.
-        params: One-dimensional array of weights.
+        params: Sequence of weights.
 
     Returns:
         Number of hidden nodes that, when taken with respect to `inb`
@@ -36,7 +36,7 @@ def depth(inb: int, out: int, params: Array) -> int:
     return hid
 
 
-def adj_arr(shape: Shape, params: Array) -> Tensor:
+def adj_arr(shape: Shape, params: Tensor) -> Tensor:
     """Constructs a sliced weighted acyclic-digraph adjacency matrix.
 
     Assigns weights from `params` to an acylic-digraph adjacency matrix
@@ -44,16 +44,16 @@ def adj_arr(shape: Shape, params: Array) -> Tensor:
 
     Args:
         shape: Tuple containing number of nodes per type.
-        params: One-dimensional array of weights.
+        params: Sequence of weights.
 
     Returns:
-        Two-dimensional array of weights where the rows and columns
-        represent source and target nodes respectively. Only arcs with
-        non-output source and non-input target are represented.
+        Weighted adjacency matrix where the rows and columns represent
+        source and target nodes respectively. Only arcs with non-output
+        source and non-input target are represented.
 
     Raises:
-        AttributeError: If weighted acyclic-digraph adjacency matrix
-            cannot be completely initialized.
+        AttributeError: If weighted adjacency matrix cannot be
+            completely initialized.
     """
     inb, _, out = shape
     Σ = np.sum(shape)
@@ -78,8 +78,8 @@ def nd_vect(shape: Shape) -> Tensor:
         shape: Tuple containing number of nodes per type.
 
     Returns:
-        One-dimensional array of values where each element represents
-        the stored value of a non-output node.
+        Node vector where each element represents the stored value of a
+        non-output node.
     """
     Σ = np.sum(shape[0:2])
     v = np.zeros(int(Σ), dtype=float)
