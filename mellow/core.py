@@ -5,7 +5,7 @@ import warnings
 import jax.numpy as np
 import jax.ops as jo
 
-from mellow import nn
+import mellow.ops as mo
 from mellow.typing import Tensor, UFunc
 
 
@@ -30,14 +30,14 @@ class Network(object):
                 same number of arcs as weights in `params`.
         """
         inb = inp + 1  # Accounts for bias unit.
-        hid = nn.depth(inb, out, params)
+        hid = mo.depth(inb, out, params)
 
         with warnings.catch_warnings():  # Filters precision warnings.
             warnings.filterwarnings("ignore", message="Explicitly requested dtype.*")
 
             self.shape = np.array([inb, hid, out], dtype=int)
-            self.θ = nn.adj_arr(self.shape, params)
-            self.v = nn.nd_vect(self.shape)
+            self.θ = mo.adj_arr(self.shape, params)
+            self.v = mo.nd_vect(self.shape)
 
         self.A = act
 
