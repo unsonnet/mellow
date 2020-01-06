@@ -13,6 +13,16 @@ class SGD(object):
     """Mini-batch stochastic gradient descent."""
 
     def __init__(self, net: Network, cost: Loss, optimizer: Optimizer) -> None:
+        """Inits trainer.
+
+        Constructs a function that computes the gradient of `cost` with
+        respect to the weight parameters of `net`.
+
+        Args:
+            net: Network instance.
+            cost: Cost function.
+            optimizer: Optimization algorithm instance.
+        """
         self.net = net
         self.i = 0
 
@@ -21,7 +31,22 @@ class SGD(object):
         self.opt = optimizer
 
     def model(self, key, examples: Dataset, batch_size: int, epochs: int) -> Network:
-        """Fits network to labeled training set."""
+        """Fits network to labeled training set.
+
+        Updates network weight parameters by following the gradient of 
+        the cost function, minimizing loss. Network is evaluated with 
+        training data from `examples`, which is shuffled per epoch.
+        Parameters are updated per completed batch.
+
+        Args:
+            key: Pseudo-random generator state.
+            examples: Labeled training data.
+            batch_size: Number of iterations per update.
+            epochs: Number of training cycles.
+
+        Returns:
+            Network with updated parameters.
+        """
         for t in range(epochs):
             key, subkey = random.split(key)
             examples = mo.shuffle(subkey, examples)
