@@ -9,6 +9,11 @@ from mellow.train.optimizer import Optimizer
 from mellow.typing import Dataset, Loss
 
 
+class MetaData(object):
+    def __getattr__(self, name):
+        return 0
+
+
 class SGD(object):
     """Mini-batch stochastic gradient descent."""
 
@@ -24,13 +29,13 @@ class SGD(object):
             optimizer: Optimization algorithm instance.
         """
         self.net = net
-        self.i = 0
+        self.key = random.PRNGKey(0)
 
         J = lambda θ, z, y: cost(y, self.net.eval(θ, z))
         self.grad_J = value_and_grad(J)
         self.opt = optimizer
 
-    def model(self, key, examples: Dataset, batch_size: int, epochs: int) -> Network:
+    def model(self, examples: Dataset, batch_size: int, epochs: int) -> Network:
         """Fits network to labeled training set.
 
         Updates network weight parameters by following the gradient of 
@@ -39,7 +44,6 @@ class SGD(object):
         Parameters are updated per completed batch.
 
         Args:
-            key: Pseudo-random generator state.
             examples: Labeled training data.
             batch_size: Number of iterations per update.
             epochs: Number of training cycles.
@@ -47,13 +51,16 @@ class SGD(object):
         Returns:
             Network with updated parameters.
         """
+        s = MetaData()
+        i = 0
+
         for t in range(epochs):
-            key, subkey = random.split(key)
+            self.key, subkey = random.split(self.key)
             examples = mo.shuffle(subkey, examples)
 
             for z, y in mo.batch(examples, step=batch_size):
                 _, g = self.grad_J(self.net.θ, z, y)
-                self.net.θ += self.opt(self.i, g)
-                self.i += 1
+                self.net.θ += self.opt(i, g, s)
+                i += 1
 
         return self.net
