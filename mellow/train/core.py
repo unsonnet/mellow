@@ -4,8 +4,10 @@ import jax.numpy as np
 import jax.random as random
 from jax import value_and_grad
 
+import mellow.factory as factory
 from mellow import Network
 import mellow.ops as mo
+import mellow.stats as stats
 from mellow.train.optimizer import Optimizer
 from mellow.typing import Dataset, Loss
 
@@ -58,14 +60,14 @@ class SGD(object):
 
         for t in range(epochs):
             self.key, subkey = random.split(self.key)
-            examples = mo.shuffle(subkey, examples)
+            examples = stats.shuffle(subkey, examples)
 
             batches = mo.batch(examples, step=batch_size)
             i, avg = self.descent(subkey, i, batches, s, p)
             j = mo.shift(j, avg)
 
-            u = mo.tv_diff(j, 100)
-            (m, Σ), sd = mo.welford(t, u, (m, Σ))
+            u = stats.tv_diff(j, 100)
+            (m, Σ), sd = stats.welford(t, u, (m, Σ))
             p = (u - m) / 2 / sd
 
         return self.net
@@ -93,9 +95,9 @@ class SGD(object):
         avg = 0
 
         for n, (z, y) in enumerate(batches):
-            D = mo.drop_mask(key, self.net.shape, p)
+            D = factory.drop_mask(key, self.net.shape, p)
             j, g = self.grad_J(self.net.θ, D, z, y)
-            avg = mo.update_mean(n, j, avg)
+            avg = stats.update_mean(n, j, avg)
             self.net.θ += self.opt(i + n, g, state)
 
         return i + n, avg
