@@ -89,6 +89,32 @@ def nd_vect(shape: Shape) -> Tensor:
     return jo.index_update(v, 0, 1.0)
 
 
+def drop_mask(key, shape: Shape, p: float) -> Tensor:
+    """Constructs a dropout mask.
+
+    Assigns a dropout coefficient to hidden nodes with probabilty |`p`|.
+    Outgoing arcs of affected nodes are scaled by the inverse of the
+    activation probabilty to accommodate for the expected reduced
+    network capacity during training.
+    
+    Args:
+        key: Pseudo-random generator state.
+        shape: Tuple containing number of nodes per type.
+        p: Dropout probabilty.
+
+    Returns:
+        Non-negative dropout mask of equal shape to network's weighted
+        adjacency matrix.
+    """
+    inb, hid, out = shape
+    q = np.abs(1 - p)
+
+    D = (random.uniform(key, (hid, 1)) < q) / q
+    D = np.pad(D, ((inb, 0), (0, 0)), constant_values=1)
+
+    return np.repeat(D, hid + out, axis=1)
+
+
 # ------------- statistics operators -------------
 
 
