@@ -54,7 +54,7 @@ class SGD(object):
         """
         s = MetaData()
         j = np.zeros(50)
-        i = 0
+        i = m = Σ = 0
 
         for t in range(epochs):
             self.key, subkey = random.split(self.key)
@@ -65,6 +65,8 @@ class SGD(object):
             j = mo.shift(j, avg)
 
             u = mo.tv_diff(j, 100)
+            (m, Σ), sd = mo.welford(t, u, (m, Σ))
+            p = (u - m) / sd
 
         return self.net
 

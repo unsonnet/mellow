@@ -147,6 +147,31 @@ def update_mean(t: int, val: float, mean: float) -> float:
     return mean + 2 * (val - mean) / (t + 2)
 
 
+def welford(t: int, val: float, aggregates):
+    """Computes triangular-weighted standard deviation.
+
+    Approximates sample standard deviation of time-series data using a
+    weighted-form of Welford's method for numerical stability.
+
+    Args:
+        t: Time step.
+        val: New datapoint.
+        aggregates: Current mean and sum of squares.
+
+    Returns:
+        Updated aggregates and its respective sample standard deviation
+        with the new value having a greater weight than previous terms.
+    """
+    if t == 0:
+        return (val, 0), 1
+
+    mean, suma = aggregates
+    mean = update_mean(t, val, mean)
+    suma += (t + 1) * (t + 2) * (val - mean) ** 2 / t
+
+    return (mean, suma), np.sqrt(2 * suma / t / (t + 2))
+
+
 def tv_diff(data: Tensor, lambd: float) -> float:
     """Computes time derivative at endpoint.
 
