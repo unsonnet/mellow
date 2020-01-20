@@ -64,6 +64,8 @@ class SGD(object):
             i, avg = self.descent(i, batches, s)
             j = mo.shift(j, avg)
 
+            u = mo.tv_diff(j, 100)
+
         return self.net
 
     def descent(self, i: int, batches, state: MetaData):

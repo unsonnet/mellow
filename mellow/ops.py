@@ -3,6 +3,7 @@
 import jax.numpy as np
 import jax.ops as jo
 import jax.random as random
+import prox_tv as ptv
 
 from mellow.typing import Dataset, List, Shape, Tensor
 
@@ -144,6 +145,25 @@ def update_mean(t: int, val: float, mean: float) -> float:
         previous terms in the sequence.
     """
     return mean + 2 * (val - mean) / (t + 2)
+
+
+def tv_diff(data: Tensor, lambd: float) -> float:
+    """Computes time derivative at endpoint.
+
+    Approximates time derivative of `data` with a second-order backward
+    finite difference formula. Assuming the time series contains noise,
+    datapoints are filtered using Total Variation Regularization.
+
+    Args:
+        data: Uniformly-spaced time series.
+        lambd: Non-negative regularization parameter.
+
+    Returns:
+        Time derivative at endpoint of filtered `data`.
+    """
+    u = ptv.tv1_1d(data, lambd)
+
+    return (3 * u[-1] - 4 * u[-2] + u[-3]) / 2
 
 
 # --------------- helper functions ---------------
