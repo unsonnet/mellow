@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import jax.numpy as np
 import jax.random as random
 from jax import value_and_grad
 
@@ -52,15 +53,41 @@ class SGD(object):
             Network with updated parameters.
         """
         s = MetaData()
+        j = np.zeros(50)
         i = 0
 
         for t in range(epochs):
             self.key, subkey = random.split(self.key)
             examples = mo.shuffle(subkey, examples)
 
-            for z, y in mo.batch(examples, step=batch_size):
-                _, g = self.grad_J(self.net.θ, z, y)
-                self.net.θ += self.opt(i, g, s)
-                i += 1
+            batches = mo.batch(examples, step=batch_size)
+            i, avg = self.descent(i, batches, s)
+            j = mo.shift(j, avg)
 
         return self.net
+
+    def descent(self, i: int, batches, state: MetaData):
+        """Implements mini-batch gradient descent.
+
+        Updates network weight parameters by following the gradient of
+        the cost function, reducing loss. Update step is determined by
+        an optimization algorithm provided during initialization.
+
+        Args:
+            i: Iteration step.
+            batches: Sample batch generator.
+            state: Optimizer state tree.
+
+        Returns:
+            Tuple containing the current iteration step and the
+            triangular-weighted mean of losses computed during mini-
+            batch gradient descent.
+        """
+        avg = 0
+
+        for n, (z, y) in enumerate(batches):
+            j, g = self.grad_J(self.net.θ, z, y)
+            avg = mo.update_mean(n, j, avg)
+            self.net.θ += self.opt(i + n, g, state)
+
+        return i + n, avg

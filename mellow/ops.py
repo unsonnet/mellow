@@ -131,6 +131,21 @@ def batch(tensors: Dataset, step: int = 1) -> List[Tensor]:
         yield [tsr[idx:end] for tsr in tensors]
 
 
+def update_mean(t: int, val: float, mean: float) -> float:
+    """Computes triangular-weighted mean.
+
+    Args:
+        t: Time step.
+        val: New datapoint.
+        mean: Current mean.
+
+    Returns:
+        Updated mean with the new value having a greater weight than
+        previous terms in the sequence.
+    """
+    return mean + 2 * (val - mean) / (t + 2)
+
+
 # --------------- helper functions ---------------
 
 
@@ -154,3 +169,22 @@ def size(tensors: Dataset, axis: int = 0) -> int:
         raise ValueError(msg.format(axis, [tsr.shape for tsr in tensors]))
 
     return sizes.pop()
+
+
+def shift(tsr: Tensor, fill=np.nan) -> Tensor:
+    """Rolls tensor backwards by one.
+    
+    Shifts one-dimensional tensor to the left, discarding the first
+    element and filling the empty slot at the end with a new value.
+
+    Args:
+        tsr: One-dimensional tensor.
+        fill: Value to add to tensor.
+
+    Returns:
+        Tensor with same shape as `tsr` but whose elements are shifted
+        to the left by one with a new element at the end.
+    """
+    out = jo.index_update(np.empty_like(tsr), -1, fill)
+
+    return jo.index_update(out, jo.index[:-1], tsr[1:])
