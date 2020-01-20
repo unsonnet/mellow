@@ -3,6 +3,7 @@
 import jax.numpy as np
 import jax.ops as jo
 import jax.random as random
+import prox_tv as ptv
 
 from mellow.typing import Dataset, List, Shape, Tensor
 
@@ -88,6 +89,32 @@ def nd_vect(shape: Shape) -> Tensor:
     return jo.index_update(v, 0, 1.0)
 
 
+def drop_mask(key, shape: Shape, p: float) -> Tensor:
+    """Constructs a dropout mask.
+
+    Assigns a dropout coefficient to hidden nodes with probabilty |`p`|.
+    Outgoing arcs of affected nodes are scaled by the inverse of the
+    activation probabilty to accommodate for the expected reduced
+    network capacity during training.
+    
+    Args:
+        key: Pseudo-random generator state.
+        shape: Tuple containing number of nodes per type.
+        p: Dropout probabilty.
+
+    Returns:
+        Non-negative dropout mask of equal shape to network's weighted
+        adjacency matrix.
+    """
+    inb, hid, out = shape
+    q = np.abs(1 - p)
+
+    D = (random.uniform(key, (hid, 1)) < q) / q
+    D = np.pad(D, ((inb, 0), (0, 0)), constant_values=1)
+
+    return np.repeat(D, hid + out, axis=1)
+
+
 # ------------- statistics operators -------------
 
 
@@ -131,6 +158,65 @@ def batch(tensors: Dataset, step: int = 1) -> List[Tensor]:
         yield [tsr[idx:end] for tsr in tensors]
 
 
+def update_mean(t: int, val: float, mean: float) -> float:
+    """Computes triangular-weighted mean.
+
+    Args:
+        t: Time step.
+        val: New datapoint.
+        mean: Current mean.
+
+    Returns:
+        Updated mean with the new value having a greater weight than
+        previous terms in the sequence.
+    """
+    return mean + 2 * (val - mean) / (t + 2)
+
+
+def welford(t: int, val: float, aggregates):
+    """Computes triangular-weighted standard deviation.
+
+    Approximates sample standard deviation of time-series data using a
+    weighted-form of Welford's method for numerical stability.
+
+    Args:
+        t: Time step.
+        val: New datapoint.
+        aggregates: Current mean and sum of squares.
+
+    Returns:
+        Updated aggregates and its respective sample standard deviation
+        with the new value having a greater weight than previous terms.
+    """
+    if t == 0:
+        return (val, 0), 1
+
+    mean, suma = aggregates
+    mean = update_mean(t, val, mean)
+    suma += (t + 1) * (t + 2) * (val - mean) ** 2 / t
+
+    return (mean, suma), np.sqrt(2 * suma / t / (t + 2))
+
+
+def tv_diff(data: Tensor, lambd: float) -> float:
+    """Computes time derivative at endpoint.
+
+    Approximates time derivative of `data` with a second-order backward
+    finite difference formula. Assuming the time series contains noise,
+    datapoints are filtered using Total Variation Regularization.
+
+    Args:
+        data: Uniformly-spaced time series.
+        lambd: Non-negative regularization parameter.
+
+    Returns:
+        Time derivative at endpoint of filtered `data`.
+    """
+    u = ptv.tv1_1d(data, lambd)
+
+    return (3 * u[-1] - 4 * u[-2] + u[-3]) / 2
+
+
 # --------------- helper functions ---------------
 
 
@@ -154,3 +240,22 @@ def size(tensors: Dataset, axis: int = 0) -> int:
         raise ValueError(msg.format(axis, [tsr.shape for tsr in tensors]))
 
     return sizes.pop()
+
+
+def shift(tsr: Tensor, fill=np.nan) -> Tensor:
+    """Rolls tensor backwards by one.
+    
+    Shifts one-dimensional tensor to the left, discarding the first
+    element and filling the empty slot at the end with a new value.
+
+    Args:
+        tsr: One-dimensional tensor.
+        fill: Value to add to tensor.
+
+    Returns:
+        Tensor with same shape as `tsr` but whose elements are shifted
+        to the left by one with a new element at the end.
+    """
+    out = jo.index_update(np.empty_like(tsr), -1, fill)
+
+    return jo.index_update(out, jo.index[:-1], tsr[1:])
