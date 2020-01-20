@@ -4,6 +4,7 @@ import jax.numpy as np
 import jax.random as random
 from jax import value_and_grad
 
+import mellow.factory as factory
 from mellow import Network
 import mellow.ops as mo
 from mellow.train.optimizer import Optimizer
@@ -93,7 +94,7 @@ class SGD(object):
         avg = 0
 
         for n, (z, y) in enumerate(batches):
-            D = mo.drop_mask(key, self.net.shape, p)
+            D = factory.drop_mask(key, self.net.shape, p)
             j, g = self.grad_J(self.net.θ, D, z, y)
             avg = mo.update_mean(n, j, avg)
             self.net.θ += self.opt(i + n, g, state)
