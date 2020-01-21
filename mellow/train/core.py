@@ -95,7 +95,9 @@ class SGD(object):
         avg = 0
 
         for n, (z, y) in enumerate(batches):
-            D = factory.drop_mask(key, self.net.shape, p)
+            key, subkey = random.split(key)
+            D = factory.drop_mask(subkey, self.net.shape, p)
+
             j, g = self.grad_J(self.net.θ, D, z, y)
             avg = stats.update_mean(n, j, avg)
             self.net.θ += self.opt(i + n, g, state)
