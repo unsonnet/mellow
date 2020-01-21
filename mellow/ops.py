@@ -2,6 +2,7 @@
 
 import jax.numpy as np
 import jax.ops as jo
+import numpy as onp
 
 from mellow.typing import Dataset, Tensor
 
@@ -66,3 +67,20 @@ def shift(tsr: Tensor, fill=np.nan) -> Tensor:
     out = jo.index_update(np.empty_like(tsr), -1, fill)
 
     return jo.index_update(out, jo.index[:-1], tsr[1:])
+
+
+def insert(tsr: Tensor, idx, val: Tensor, axis: int = 0) -> Tensor:
+    """Wrapper of numpy.insert for jax.
+
+    Args:
+        tsr: Input tensor.
+        idx: Index before which `val` is inserted.
+        val: Values to insert into `tsr`.
+        axis: Optional, axis along which to insert (default 0).
+
+    Returns:
+        Copy of `tsr` with `val` inserted.
+    """
+    tsr = onp.insert(tsr, idx, val, axis=axis)
+
+    return np.array(tsr)

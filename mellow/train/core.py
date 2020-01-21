@@ -20,7 +20,9 @@ class MetaData(object):
 class SGD(object):
     """Mini-batch stochastic gradient descent."""
 
-    def __init__(self, net: Network, cost: Loss, optimizer: Optimizer) -> None:
+    def __init__(
+        self, net: Network, max_depth: int, cost: Loss, optimizer: Optimizer
+    ) -> None:
         """Inits trainer.
 
         Constructs a function that computes the gradient of `cost` with
@@ -28,10 +30,12 @@ class SGD(object):
 
         Args:
             net: Network instance.
+            max_depth: Maximum number of hidden nodes.
             cost: Cost function.
             optimizer: Optimization algorithm instance.
         """
         self.net = net
+        self.max_depth = max_depth
         self.key = random.PRNGKey(0)
 
         J = lambda θ, D, z, y: cost(y, self.net.eval(θ * D, z))
@@ -70,6 +74,9 @@ class SGD(object):
             (m, Σ), sd = stats.welford(t, u, (m, Σ))
             p = (u - m) / 2 / sd
 
+            self.key, subkey = random.split(self.key)
+            self.genesis(subkey, s, max(0, p))
+
         return self.net
 
     def descent(self, key, i: int, batches, state: MetaData, p: float):
@@ -103,3 +110,39 @@ class SGD(object):
             self.net.θ += self.opt(i + n, g, state)
 
         return i + n, avg
+
+    def genesis(self, key, state: MetaData, p: float) -> bool:
+        """Implements topology optimization.
+        
+        Expands network topology by inserting a node at the beginning of
+        hidden layer with probabilty `p`. weights are initialized using
+        He initialization. All metadata that depend on network topology
+        are updated to reflect the change. Process halts when maximum
+        depth is reached.
+
+        Args:
+            key: Pseudo-random generator state.
+            state: Optimizer state tree.
+            p: Genesis probabilty.
+
+        Returns:
+            True if network topology successfully expanded, else false.
+        """
+        inb, hid, _ = self.net.shape
+
+        if hid >= self.max_depth or random.uniform(key) < (1 - p):
+            return False
+
+        for name in dir(state):
+            var = getattr(state, name)
+
+            if np.shape(var) == self.net.θ.shape:
+                var = mo.insert(var, 0, 0, axis=1)
+                var = mo.insert(var, inb, 0, axis=0)
+                setattr(state, name, var)
+
+        Σ = np.sum(self.net.shape)
+        weights = random.normal(key, (Σ,)) * np.sqrt(2 / inb)
+        self.net.add_nd(weights)
+
+        return True
