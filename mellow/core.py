@@ -5,6 +5,7 @@ import warnings
 import jax.numpy as np
 import jax.ops as jo
 
+import mellow.factory as factory
 import mellow.ops as mo
 from mellow.typing import Tensor, UFunc
 
@@ -30,16 +31,45 @@ class Network(object):
                 same number of arcs as weights in `params`.
         """
         inb = inp + 1  # Accounts for bias unit.
-        hid = mo.depth(inb, out, params)
+        hid = factory.depth(inb, out, params)
 
         with warnings.catch_warnings():  # Filters precision warnings.
             warnings.filterwarnings("ignore", message="Explicitly requested dtype.*")
 
             self.shape = np.array([inb, hid, out], dtype=int)
-            self.θ = mo.adj_arr(self.shape, params)
-            self.v = mo.nd_vect(self.shape)
+            self.θ = factory.adj_arr(self.shape, params)
+            self.v = factory.nd_vect(self.shape)
 
         self.A = act
+
+    def add_nd(self, params):
+        """Adds a new hidden node to network.
+        
+        Inserts a node represented by `params` at the beginning of the
+        hidden layer. Regarding the weighted adjacency matrix, arcs are
+        assigned in row-major order such that it preserves topological
+        ordering.
+
+        Args:
+            params: Sequence of weights.
+
+        Raises:
+            AttributeError: If insufficient number of weights is given.
+        """
+        inb, hid, _ = self.shape
+        Σ = np.sum(self.shape)
+
+        if Σ != len(params):
+            msg = "{} weights required to add a node to a {} network, got {}."
+            raise AttributeError(msg.format(Σ, self.shape, len(params)))
+
+        self.shape = jo.index_add(self.shape, 1, 1)
+        self.v = np.append(self.v, 0)
+
+        col = np.pad(params[:inb], (0, hid), constant_values=0)
+        row = np.pad(params[inb:], (1, 0), constant_values=0)
+        self.θ = mo.insert(self.θ, 0, col, axis=1)
+        self.θ = mo.insert(self.θ, inb, row, axis=0)
 
     def predict(self, z: Tensor) -> Tensor:
         """Produces a hypothesis from `z`.
