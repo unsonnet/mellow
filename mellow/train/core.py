@@ -10,8 +10,18 @@ import mellow.stats as stats
 
 
 class MetaData(object):
+    def __init__(self):
+        self._k = []
+
+    def __setattr__(self, name, val):
+        super().__setattr__(name, val)
+
     def __getattr__(self, name):
+        self._k.append(name)
         return 0
+
+    def __dir__(self):
+        return self._k
 
 
 class SGD(object):
