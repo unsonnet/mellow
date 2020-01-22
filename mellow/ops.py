@@ -4,10 +4,8 @@ import jax.numpy as np
 import jax.ops as jo
 import numpy as onp
 
-from mellow.typing import Dataset, Tensor
 
-
-def size(tensors: Dataset, axis: int = 0) -> int:
+def size(tensors, axis=0):
     """Measures the size of tensors along an axis.
 
     Args:
@@ -29,7 +27,7 @@ def size(tensors: Dataset, axis: int = 0) -> int:
     return sizes.pop()
 
 
-def batch(tensors: Dataset, step: int = 1) -> Dataset:
+def batch(tensors, step=1):
     """Generates uniform batches from tensors in unison.
 
     Args:
@@ -50,7 +48,7 @@ def batch(tensors: Dataset, step: int = 1) -> Dataset:
         yield [tsr[idx:end] for tsr in tensors]
 
 
-def shift(tsr: Tensor, fill=np.nan) -> Tensor:
+def shift(tsr, fill=np.nan):
     """Rolls tensor backwards by one.
     
     Shifts one-dimensional tensor to the left, discarding the first
@@ -69,7 +67,7 @@ def shift(tsr: Tensor, fill=np.nan) -> Tensor:
     return jo.index_update(out, jo.index[:-1], tsr[1:])
 
 
-def insert(tsr: Tensor, idx, val: Tensor, axis: int = 0) -> Tensor:
+def insert(tsr, idx, val, axis=0):
     """Wrapper of numpy.insert for jax.
 
     Args:

@@ -7,13 +7,12 @@ import jax.ops as jo
 
 import mellow.factory as factory
 import mellow.ops as mo
-from mellow.typing import Tensor, UFunc
 
 
 class Network(object):
     """Homogenous feedforward neural network."""
 
-    def __init__(self, inp: int, out: int, params: Tensor, act: UFunc) -> None:
+    def __init__(self, inp, out, params, act):
         """Inits Network.
 
         Deduces the structure of a network represented by `inp`, `out`,
@@ -71,7 +70,7 @@ class Network(object):
         self.θ = mo.insert(self.θ, 0, col, axis=1)
         self.θ = mo.insert(self.θ, inb, row, axis=0)
 
-    def predict(self, z: Tensor) -> Tensor:
+    def predict(self, z):
         """Produces a hypothesis from `z`.
 
         Args:
@@ -85,7 +84,7 @@ class Network(object):
         """
         return self.eval(self.θ, z)
 
-    def eval(self, θ: Tensor, z: Tensor) -> Tensor:
+    def eval(self, θ, z):
         """Evaluates network on input.
 
         Forward propagates data from `z` through network with arcs
@@ -115,7 +114,7 @@ class Network(object):
 
         return np.dot(v, θ[:, -out:])
 
-    def reshape(self, z: Tensor) -> Tensor:
+    def reshape(self, z):
         """Formats input for network evaluation.
 
         Assigns data from `z` to input layer. Multiple node vectors are

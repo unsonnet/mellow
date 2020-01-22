@@ -5,11 +5,8 @@ import jax.random as random
 from jax import value_and_grad
 
 import mellow.factory as factory
-from mellow import Network
 import mellow.ops as mo
 import mellow.stats as stats
-from mellow.train.optimizer import Optimizer
-from mellow.typing import Dataset, Loss
 
 
 class MetaData(object):
@@ -20,9 +17,7 @@ class MetaData(object):
 class SGD(object):
     """Mini-batch stochastic gradient descent."""
 
-    def __init__(
-        self, net: Network, max_depth: int, cost: Loss, optimizer: Optimizer
-    ) -> None:
+    def __init__(self, net, max_depth, cost, optimizer):
         """Inits trainer.
 
         Constructs a function that computes the gradient of `cost` with
@@ -32,7 +27,7 @@ class SGD(object):
             net: Network instance.
             max_depth: Maximum number of hidden nodes.
             cost: Cost function.
-            optimizer: Optimization algorithm instance.
+            optimizer: Weight optimization algorithm.
         """
         self.net = net
         self.max_depth = max_depth
@@ -42,7 +37,7 @@ class SGD(object):
         self.grad_J = value_and_grad(J)
         self.opt = optimizer
 
-    def model(self, examples: Dataset, batch_size: int, epochs: int) -> Network:
+    def model(self, examples, batch_size, epochs):
         """Fits network to labeled training set.
 
         Updates network weight parameters by following the gradient of 
@@ -79,7 +74,7 @@ class SGD(object):
 
         return self.net
 
-    def descent(self, key, i: int, batches, state: MetaData, p: float):
+    def descent(self, key, i, batches, state, p):
         """Implements mini-batch gradient descent.
 
         Updates network weight parameters by following the gradient of
@@ -111,7 +106,7 @@ class SGD(object):
 
         return i + n, avg
 
-    def genesis(self, key, state: MetaData, p: float) -> bool:
+    def genesis(self, key, state, p):
         """Implements topology optimization.
         
         Expands network topology by inserting a node at the beginning of

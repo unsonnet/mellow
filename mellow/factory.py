@@ -4,10 +4,8 @@ import jax.numpy as np
 import jax.ops as jo
 import jax.random as random
 
-from mellow.typing import Shape, Tensor
 
-
-def depth(inb: int, out: int, params: Tensor) -> int:
+def depth(inb, out, params):
     """Deduces depth of hidden layer.
 
     Args:
@@ -34,7 +32,7 @@ def depth(inb: int, out: int, params: Tensor) -> int:
     return hid
 
 
-def adj_arr(shape: Shape, params: Tensor) -> Tensor:
+def adj_arr(shape, params):
     """Constructs a sliced weighted acyclic-digraph adjacency matrix.
 
     Assigns weights from `params` to an acylic-digraph adjacency matrix
@@ -66,7 +64,7 @@ def adj_arr(shape: Shape, params: Tensor) -> Tensor:
     return jo.index_update(arr.astype(float), arr, params)
 
 
-def nd_vect(shape: Shape) -> Tensor:
+def nd_vect(shape):
     """Constructs a node vector.
 
     Assigns 0 to all non-output nodes except the bias unit which
@@ -85,7 +83,7 @@ def nd_vect(shape: Shape) -> Tensor:
     return jo.index_update(v, 0, 1.0)
 
 
-def drop_mask(key, shape: Shape, p: float) -> Tensor:
+def drop_mask(key, shape, p):
     """Constructs a dropout mask.
 
     Assigns a dropout coefficient to hidden nodes with probabilty |`p`|.

@@ -5,10 +5,9 @@ import jax.random as random
 import prox_tv as ptv
 
 import mellow.ops as mo
-from mellow.typing import Dataset, Tensor
 
 
-def shuffle(key, tensors: Dataset, axis: int = 0) -> Dataset:
+def shuffle(key, tensors, axis=0):
     """Shuffles the contents of tensors in unison.
 
     Args:
@@ -27,7 +26,7 @@ def shuffle(key, tensors: Dataset, axis: int = 0) -> Dataset:
     return [random.shuffle(key, tsr, axis=axis) for tsr in tensors]
 
 
-def update_mean(t: int, val: float, mean: float) -> float:
+def update_mean(t, val, mean):
     """Computes triangular-weighted mean.
 
     Args:
@@ -42,7 +41,7 @@ def update_mean(t: int, val: float, mean: float) -> float:
     return mean + 2 * (val - mean) / (t + 2)
 
 
-def welford(t: int, val: float, aggregates):
+def welford(t, val, aggregates):
     """Computes triangular-weighted standard deviation.
 
     Approximates sample standard deviation of time-series data using a
@@ -67,7 +66,7 @@ def welford(t: int, val: float, aggregates):
     return (mean, suma), np.sqrt(2 * suma / t / (t + 2))
 
 
-def tv_diff(data: Tensor, lambd: float) -> float:
+def tv_diff(data, lambd):
     """Computes time derivative at endpoint.
 
     Approximates time derivative of `data` with a second-order backward
