@@ -65,8 +65,9 @@ class SGD(object):
         for t in range(epochs):
             self.key, subkey = random.split(self.key)
             examples = stats.shuffle(subkey, examples)
-
             batches = mo.batch(examples, step=batch_size)
+
+            self.key, subkey = random.split(self.key)
             i, avg = self.descent(subkey, i, batches, s, p)
             j = mo.shift(j, avg)
 

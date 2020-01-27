@@ -103,7 +103,7 @@ def drop_mask(key, shape: Shape, p: float) -> Tensor:
         adjacency matrix.
     """
     inb, hid, out = shape
-    q = np.abs(1 - p)
+    q = 1 - np.abs(p)
 
     D = (random.uniform(key, (hid, 1)) < q) / q
     D = np.pad(D, ((inb, 0), (0, 0)), constant_values=1)
