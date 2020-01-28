@@ -7,7 +7,7 @@ setup(
     author="Santiago Rodriguez",
     author_email="srodvasquez@gmail.com",
     packages=find_packages(),
-    install_requires=["numpy", "jax", "jaxlib"],
+    install_requires=["numpy", "jax", "jaxlib", "prox_tv"],
     url="https://github.com/QubicLens/mellow",
     license="Apache-2.0",
 )
