@@ -15,6 +15,7 @@ class MetaData(object):
 
     def __setattr__(self, name, val):
         super().__setattr__(name, val)
+        self._k.append(name)
 
     def __getattr__(self, name):
         self._k.append(name)
