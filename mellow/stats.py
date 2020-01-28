@@ -26,7 +26,7 @@ def shuffle(key, tensors, axis=0):
     return [random.shuffle(key, tsr, axis=axis) for tsr in tensors]
 
 
-def update_mean(t: int, z: float, mean: float) -> float:
+def update_mean(t, z, mean):
     """Computes triangular-weighted mean.
 
     Args:
@@ -41,7 +41,7 @@ def update_mean(t: int, z: float, mean: float) -> float:
     return mean + 2 * (z - mean) / (t + 2)
 
 
-def update_variance(t: int, z: float, sv: float) -> float:
+def update_variance(t, z, sv):
     """Computes triangular-weighted sample variance.
 
     Args:

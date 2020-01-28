@@ -50,10 +50,11 @@ class SGD(object):
     def model(self, examples, batch_size, epochs):
         """Fits network to labeled training set.
 
-        Updates network weight parameters by following the gradient of 
-        the cost function, minimizing loss. Network is evaluated with 
-        training data from `examples`, which is shuffled per epoch.
-        Parameters are updated per completed batch.
+        Updates network to model the relationship between variables via
+        supervised learning. Regression is performed on training data
+        from `examples` shuffled and grouped into batches per epoch.
+        Weights are updated per batch while network topology may be
+        altered per epoch.
 
         Args:
             examples: Labeled training data.
