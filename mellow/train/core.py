@@ -60,7 +60,7 @@ class SGD(object):
         """
         s = MetaData()
         j = np.zeros(50)
-        i = p = m = Σ = 0
+        i = sv = p = 0
 
         for t in range(epochs):
             self.key, subkey = random.split(self.key)
@@ -68,12 +68,12 @@ class SGD(object):
             batches = mo.batch(examples, step=batch_size)
 
             self.key, subkey = random.split(self.key)
-            i, avg = self.descent(subkey, i, batches, s, p)
-            j = mo.shift(j, avg)
+            i, avg = self.descent(subkey, i, batches, s, p / 2)
 
+            j = mo.shift(j, avg)
             u = stats.tv_diff(j, 100)
-            (m, Σ), sd = stats.welford(t, u, (m, Σ))
-            p = (u - m) / 2 / sd
+            sv = stats.update_variance(t, u, sv)
+            p = np.nan_to_num(u / 2 / np.sqrt(sv))
 
             self.key, subkey = random.split(self.key)
             self.genesis(subkey, s, max(0, p))

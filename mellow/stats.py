@@ -27,44 +27,41 @@ def shuffle(key, tensors: Dataset, axis: int = 0) -> Dataset:
     return [random.shuffle(key, tsr, axis=axis) for tsr in tensors]
 
 
-def update_mean(t: int, val: float, mean: float) -> float:
+def update_mean(t: int, z: float, mean: float) -> float:
     """Computes triangular-weighted mean.
 
     Args:
         t: Time step.
-        val: New datapoint.
+        z: New datapoint.
         mean: Current mean.
 
     Returns:
         Updated mean with the new value having a greater weight than
         previous terms in the sequence.
     """
-    return mean + 2 * (val - mean) / (t + 2)
+    return mean + 2 * (z - mean) / (t + 2)
 
 
-def welford(t: int, val: float, aggregates):
-    """Computes triangular-weighted standard deviation.
-
-    Approximates sample standard deviation of time-series data using a
-    weighted-form of Welford's method for numerical stability.
+def update_variance(t: int, z: float, sv: float) -> float:
+    """Computes triangular-weighted sample variance.
 
     Args:
         t: Time step.
-        val: New datapoint.
-        aggregates: Current mean and sum of squares.
+        z: New datapoint.
+        sv: Current sample variance.
 
     Returns:
-        Updated aggregates and its respective sample standard deviation
-        with the new value having a greater weight than previous terms.
+        Updated sample variance with the new value having a greater
+        weight than previous terms in the sequence.
     """
     if t == 0:
-        return (val, 0), 1
+        suma = z ** 2
+    elif t == 1:
+        suma = (4 * z ** 2 - sv) / 3
+    else:
+        suma = (2 * (t + 1) * z ** 2 - (2 * t + 1) * sv) / t / (t + 2)
 
-    mean, suma = aggregates
-    mean = update_mean(t, val, mean)
-    suma += (t + 1) * (t + 2) * (val - mean) ** 2 / t
-
-    return (mean, suma), np.sqrt(2 * suma / t / (t + 2))
+    return sv + suma
 
 
 def tv_diff(data: Tensor, lambd: float) -> float:
