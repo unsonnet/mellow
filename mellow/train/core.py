@@ -66,24 +66,27 @@ class SGD(object):
             Network with updated parameters.
         """
         s = MetaData()
-        j = np.zeros(50)
-        i = sv = p = 0
+        j = np.zeros(10)
+        i = u0 = 0
+        p0 = 0.5
 
         for t in range(epochs):
+            u = stats.tv_diff(j, 100)
+            p = stats.update_prob(u0, u, p0)
+
+            if p > 0:
+                u0, p0 = (np.abs(u), p)
+
+            self.key, subkey = random.split(self.key)
+            self.genesis(subkey, s, (u > 0) * p)
+
             self.key, subkey = random.split(self.key)
             examples = stats.shuffle(subkey, examples)
             batches = mo.batch(examples, step=batch_size)
 
             self.key, subkey = random.split(self.key)
-            i, avg = self.descent(subkey, i, batches, s, p / 2)
-
+            i, avg = self.descent(subkey, i, batches, s, p)
             j = mo.shift(j, avg)
-            u = stats.tv_diff(j, 100)
-            sv = stats.update_variance(t, u, sv)
-            p = np.nan_to_num(u / 2 / np.sqrt(sv))
-
-            self.key, subkey = random.split(self.key)
-            self.genesis(subkey, s, max(0, p))
 
         return self.net
 

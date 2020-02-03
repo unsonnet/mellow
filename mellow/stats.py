@@ -27,7 +27,7 @@ def shuffle(key, tensors, axis=0):
 
 
 def update_mean(t, z, mean):
-    """Computes triangular-weighted mean.
+    """Computes arithmetic-weighted mean.
 
     Args:
         t: Time step.
@@ -35,32 +35,31 @@ def update_mean(t, z, mean):
         mean: Current mean.
 
     Returns:
-        Updated mean with the new value having a greater weight than
-        previous terms in the sequence.
+        Updated mean with `z` having equal weight to previous terms in
+        the sequence.
     """
-    return mean + 2 * (z - mean) / (t + 2)
+    return mean + (z - mean) / (t + 1)
 
 
-def update_variance(t, z, sv):
-    """Computes triangular-weighted sample variance.
+def update_prob(u0, u, p):
+    """Computes fuzzy probabilty measure.
+
+    Maps `u` to a mellow probability value influenced by past values.
+    Numbers are scaled such that relatively large updates in `u` incur
+    higher probabilities than smaller perturbations.
 
     Args:
-        t: Time step.
-        z: New datapoint.
-        sv: Current sample variance.
+        u0: Current datapoint associated with `p`.
+        u: New datapoint.
+        p: Current probability.
 
     Returns:
-        Updated sample variance with the new value having a greater
-        weight than previous terms in the sequence.
+        Updated probability given `u`.
     """
-    if t == 0:
-        suma = z ** 2
-    elif t == 1:
-        suma = (4 * z ** 2 - sv) / 3
-    else:
-        suma = (2 * (t + 1) * z ** 2 - (2 * t + 1) * sv) / t / (t + 2)
+    u = np.abs(u)
+    a = u / (1 + u) + 1
 
-    return sv + suma
+    return 0 if u == 0 else p / (u0 / u * (1 - p) + a * p)
 
 
 def tv_diff(data, lambd):
