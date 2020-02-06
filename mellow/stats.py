@@ -21,9 +21,10 @@ def shuffle(key, tensors, axis=0):
     Raises:
         ValueError: If shape of tensors do not match along `axis`.
     """
-    mo.size(tensors, axis=axis)
+    a = mo.size(tensors, axis=axis)
+    p = random.shuffle(key, np.arange(a))
 
-    return [random.shuffle(key, tsr, axis=axis) for tsr in tensors]
+    return [np.take(tsr, p, axis=axis) for tsr in tensors]
 
 
 def update_mean(t, z, mean):
