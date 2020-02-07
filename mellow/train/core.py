@@ -73,6 +73,7 @@ class SGD(object):
         for t in range(epochs):
             u = stats.tv_diff(j, 100)
             p = stats.update_prob(u0, u, p0)
+            p = stats.init_prob(u) if t < 2 else stats.update_prob(u0, u, p0)
 
             if p > 0:
                 u0, p0 = (np.abs(u), p)

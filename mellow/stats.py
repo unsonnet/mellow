@@ -42,6 +42,12 @@ def update_mean(t, z, mean):
     return mean + (z - mean) / (t + 1)
 
 
+def init_prob(u):
+    u = np.abs(u)
+
+    return u / (1 + u + u ** 2 / (1 + u))
+
+
 def update_prob(u0, u, p):
     """Computes fuzzy probabilty measure.
 
