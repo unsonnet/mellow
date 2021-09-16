@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 
+# This sets up the mellow package
 setup(
     name="mellow",
     version="0.0.1",
